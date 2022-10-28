@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <title>Bate-papo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0,maximum-scale=1.0">
+
+  <!-- Tailwind CDN's -->
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<style>
+  ::-webkit-scrollbar {
+    display: none;
+  }
+</style>
+
+<body class="bg-zinc-900">
+
+  <div class="absolute bottom-4 left-6 text-gray-200">
+    <div class="flex">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"
+        class="w-6 h-6 text-gray-200">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M3 8.25V18a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 18V8.25m-18 0V6a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 6v2.25m-18 0h18M5.25 6h.008v.008H5.25V6zM7.5 6h.008v.008H7.5V6zm2.25 0h.008v.008H9.75V6z" />
+      </svg>
+
+      <span class="ml-2">
+        Codificado por <a target="_blank" href="https://github.com/joaoluft"><strong class="underline">João
+            Luft</strong></a>
+      </span>
+    </div>
+  </div>
+
+  <section class="grid h-screen justify-center items-center">
+
+    <!-- Login -->
+    <div class="userLogin bg-black p-16 rounded-lg shadow-lg">
+      <h5 class="text-4xl font-bold tracking-tight text-gray-200">Entrar no bate-papo</h5>
+      <form class="loginForm pt-8">
+        <div class="mb-6">
+          <input maxlength="30" type="text"
+            class="loginName bg-zinc-900 shadow-lg font-medium border-0 text-gray-200 placeholder:text-gray-200 text-sm rounded-lg focus:ring-0 focus:outline-none block w-full py-4 px-5"
+            placeholder="Ex: usuario123" required>
+        </div>
+        <button type="submit"
+          class="w-full shadow-lg text-white bg-zinc-800 hover:bg-zinc-900 duration-300 ease-in-out focus:ring-0 focus:outline-none font-medium rounded-lg text-md w-full px-5 py-4 text-center">Pronto</button>
+      </form>
+    </div>
+    <!-- End - Login -->
+
+    <!-- Chat -->
+    <div class="hidden chatContainer text-white">
+      <div class="w-full">
+        <div class="flex">
+          <div
+            class="messages-container relative w-full overflow-y-auto h-[40rem] w-[30rem] bg-black rounded-lg shadow-lg">
+            <div class="sticky top-0 bg-zinc-800 w-full py-6 z-50 shadow-lg">
+              <h5 class="text-2xl font-bold text-gray-200 text-center">Conectado ao Bate-Papo</h5>
+            </div>
+            <ul class="messages space-y-2 p-6"></ul>
+          </div>
+          <div class="relative ml-4 w-full p-6 overflow-y-auto h-[40rem] w-[15rem] bg-black rounded-lg shadow-lg">
+            <h1 class="w-full text-center px-4 py-2">Usuários: <span class="usersCount"></span></h1>
+            <ul class="usersList w-48 text-sm text-center font-medium rounded-lg"></ul>
+          </div>
+        </div>
+        <form class="chat flex" autocomplete="off">
+          <div class="relative mt-4 w-[30rem]">
+            <input type="text"
+              class="typeMessageInput placeholder:text-gray-200 font-medium bg-black text-gray-200 rounded-lg focus:ring-0 focus:outline-none block w-full px-6 py-5 pr-24"
+              placeholder="Digite sua mensagem...">
+            <div class="absolute top-3 right-3">
+              <button type='submit'
+                class="text-sm text-gray-200 font-medium rounded-lg bg-zinc-800 focus:ring-0 focus:outline-none rounded-lg w-full px-5 py-2.5 text-center">Enviar</button>
+            </div>
+          </div>
+          <button type="button"
+            class="userLogout w-[15rem] ml-4 mt-4 font-medium rounded-lg px-5 py-5 text-center mr-2 mb-2 text-gray-200 bg-black shadow-lg">Desconectar</button>
+        </form>
+      </div>
+    </div>
+    <!-- End - Chat -->
+
+  </section>
+
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
+  <script type="text/javascript" src="/socket.io/socket.io.js"></script>
+  <script type="text/javascript">
+    $(document).ready(function () {
+
+      let socket = io.connect();
+
+      // On message send
+      $(".chat").submit(function (e) {
+        e.preventDefault();
+
+        let mensagem = $(this).find(".typeMessageInput").val();
+        socket.emit("userSendMessage", { message: mensagem }, function () {
+          $(".typeMessageInput").val("");
+        });
+      });
+
+      socket.on("userUpdateMessage", function (data) {
+        if (data.message != '') {
+          let message_content = '';
+
+          switch (data.type) {
+            case 'welcome' || 'exit':
+              content = `
+                <li class="justify-end"> 
+                  <div class="relative overflow-hidden min-w-fit px-4 py-2 text-gray-100 bg-zinc-800 rounded-lg shadow-lg">
+                    <div class="absolute left-4 inline-block text-xs">Sistema</div>
+                      <p class="block pt-4 break-all">` + data.message + `</p> 
+                      <div class="inline-block text-3xs font-medium">` + data.date + `</div>
+                  </div>
+                </li>`;
+              break;
+            default:
+              content = `
+                <li class="justify-end"> 
+                  <div class="relative overflow-hidden min-w-fit px-4 py-2 text-gray-100 bg-zinc-800 rounded-lg shadow-lg">
+                    
+                    <div class="absolute left-4 inline-block text-xs">` + data.sender + `</div>
+                      <p class="block pt-4 break-all">` + data.message + `</p> 
+                      <div class="inline-block text-3xs font-medium">` + data.date + `</div>
+                    </div>
+                 
+                </li>`;
+          }
+
+          $(content).hide().appendTo($('.messages')).fadeIn(300).each(function () {
+            $(".messages-container").animate({ scrollTop: $(document).height() }, 1000);
+            console.log('Mensagem enviada com sucesso!');
+          });
+        }
+      });
+
+      $(".loginForm").submit(function (event) {
+        event.preventDefault();
+        socket.emit("userLogin", $(".loginName").val(), function (callback) {
+          switch (callback) {
+            case 3:
+              $(".userLogin").hide();
+              $(".chatContainer").fadeIn(500);
+              break;
+            default:
+              $(".userLogin").val("");
+              alert("Usuário válido tente novamente!");
+          }
+        });
+      });
+
+      // Update users list
+      socket.on("updateConnectedUsers", function (connectedUsers) {
+        $(".usersList").empty();
+        $(".usersCount").html('<strong>' + connectedUsers.length + '</strong>');
+        $.each(connectedUsers, function (i) {
+          let content = `<li class="w-full rounded-lg mt-4 p-2 bg-zinc-800 truncate w-md">` + connectedUsers[i] + `</li>`;
+          $(content).hide().appendTo($('.usersList')).fadeIn(500).each(function () {
+            console.log('Usuários atualizados com sucesso!');
+          });
+        });
+      });
+
+      // Logout button
+      $(".userLogout").click(function (e) {
+        e.preventDefault();
+        socket.disconnect();
+        window.location.reload(true);
+      });
+    });
+  </script>
+
+</body>
+
+</html>
